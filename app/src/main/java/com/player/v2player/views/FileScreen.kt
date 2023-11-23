@@ -10,7 +10,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.navigation.NavController
+import com.player.v2player.R
 import com.player.v2player.constants.AppConstants
 import com.player.v2player.navigation.Routes
 import java.io.File
@@ -41,7 +44,12 @@ fun FileScreen(navController: NavController) {
                     }
                 }) {
                     val file = File(video)
-                    Text(text = file.name)
+                    Text(
+                        text = file.name,
+                        fontFamily = FontFamily(
+                            Font(R.font.raleway_bold)
+                        ),
+                    )
                 }
             }
         }

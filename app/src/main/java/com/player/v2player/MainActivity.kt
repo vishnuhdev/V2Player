@@ -13,6 +13,8 @@ import com.player.v2player.ui.theme.V2PlayerTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         setContent {
             V2PlayerTheme {
                 Surface(

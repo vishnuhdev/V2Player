@@ -77,5 +77,14 @@ dependencies {
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
+    //ViewModel Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
+
+    //Lottie Animation
+    implementation("com.airbnb.android:lottie-compose:5.0.3")
+
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.1.0-alpha13")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0-alpha13")
+
 
 }
