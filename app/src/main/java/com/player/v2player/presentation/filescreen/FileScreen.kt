@@ -1,4 +1,4 @@
-package com.player.v2player.views
+package com.player.v2player.presentation.filescreen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -14,8 +14,8 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.navigation.NavController
 import com.player.v2player.R
-import com.player.v2player.constants.AppConstants
-import com.player.v2player.navigation.Routes
+import com.player.v2player.data.constants.AppConstants
+import com.player.v2player.presentation.navigation.Routes
 import java.io.File
 
 @Composable

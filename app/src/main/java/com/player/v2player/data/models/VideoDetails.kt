@@ -1,4 +1,4 @@
-package com.player.v2player.models
+package com.player.v2player.data.models
 
 data class VideoDetails(
     val folderName: String,

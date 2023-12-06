@@ -1,12 +1,12 @@
-package com.player.v2player.navigation
+package com.player.v2player.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.player.v2player.views.FileScreen
-import com.player.v2player.views.HomeScreen
-import com.player.v2player.views.VideoPlayerScreen
+import com.player.v2player.presentation.filescreen.FileScreen
+import com.player.v2player.presentation.homescreen.HomeScreen
+import com.player.v2player.presentation.videoscreen.VideoPlayerScreen
 
 @Composable
 fun AppNavigation() {

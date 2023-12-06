@@ -1,4 +1,4 @@
-package com.player.v2player.views
+package com.player.v2player.presentation.permisson
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

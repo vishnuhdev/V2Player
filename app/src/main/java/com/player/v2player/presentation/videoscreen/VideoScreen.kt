@@ -1,9 +1,8 @@
-package com.player.v2player.views
+package com.player.v2player.presentation.videoscreen
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.net.Uri
-import android.util.Log
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.AnimatedVisibility
@@ -29,9 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,17 +46,16 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.navigation.NavHostController
 import com.player.v2player.R
-import com.player.v2player.components.PlayerButton
-import com.player.v2player.constants.AppConstants
-import com.player.v2player.viewModels.VideoScreenViewModel
+import com.player.v2player.data.constants.AppConstants
+import com.player.v2player.presentation.videoscreen.components.PlayerButton
+import com.player.v2player.presentation.videoscreen.viewmodel.ViewModel
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -68,63 +65,47 @@ import kotlinx.coroutines.launch
 fun VideoPlayerScreen(navController: NavHostController) {
 
 
-    val videoScreenVM  = VideoScreenViewModel()
     val context = LocalContext.current
+    val viewModel = hiltViewModel<ViewModel>()
     val videoUri = navController.previousBackStackEntry?.savedStateHandle?.get<String>(
         AppConstants.VideoUri
     )
-
-
-    LaunchedEffect(Unit) {
-        videoScreenVM.init(context, videoUri ?: "")
+    val uri = if (!videoUri.isNullOrEmpty()) {
+        Uri.parse(videoUri)
+    } else {
+        Uri.parse("Video")
     }
-
-
-    var playWhenReady by remember { mutableStateOf(true) }
-
-    Log.d("videoUri", videoUri.toString())
-
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.parse(videoUri)))
-            repeatMode = ExoPlayer.REPEAT_MODE_OFF
-            playWhenReady = playWhenReady
-            prepare()
-            play()
-        }
-    }
-
+    val fileName = uri.lastPathSegment
     var lifeCycle by remember {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
     val coroutineScope = rememberCoroutineScope()
     val lifeCycleOwner = LocalLifecycleOwner.current
-    var isPlaying by remember { mutableStateOf(false) }
-    var showControls by remember { mutableStateOf(true) }
-    var isVideoFinished by remember { mutableStateOf(false) }
-    var isLandScapeOrientation by remember { mutableStateOf(false) }
-    var videoDuration by remember { mutableLongStateOf(0L) }
-    var videoPosition by remember { mutableLongStateOf(0L) }
-    var seekToPosition by remember { mutableLongStateOf(0L) }
-    var sliderValue by remember {
-        mutableFloatStateOf(0f)
-    }
-
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val showControls by viewModel.showControls.collectAsState()
+    val isLandScapeOrientation by viewModel.isLandScapeOrientation.collectAsState()
+    val videoDuration by viewModel.videoDuration.collectAsState()
+    val videoPosition by viewModel.videoPosition.collectAsState()
+    val seekToPosition by viewModel.seekToPosition.collectAsState()
+    val sliderValue by viewModel.sliderValue.collectAsState()
 
 
     LaunchedEffect(Unit) {
-        delay(5000)
-        showControls = !showControls
+        viewModel.playVideo(Uri.parse(videoUri))
     }
 
+    LaunchedEffect(Unit) {
+        delay(5000)
+        viewModel.toggleShowControls()
+    }
 
     DisposableEffect(Unit) {
         val updateTimeJob = coroutineScope.launch {
             while (true) {
-                val position = exoPlayer.currentPosition
-                val maxPosition = exoPlayer.duration
+                val position = viewModel.player.currentPosition
+                val maxPosition = viewModel.player.duration
                 val progress = (position * 1000f / maxPosition).coerceIn(0f, 1000f)
-                sliderValue = progress
+                viewModel.setSliderValue(progress)
                 delay(1000)
             }
         }
@@ -134,14 +115,13 @@ fun VideoPlayerScreen(navController: NavHostController) {
         }
     }
 
-
     LaunchedEffect(seekToPosition) {
-        exoPlayer.seekTo(seekToPosition)
+        viewModel.player.seekTo(seekToPosition)
     }
 
     LaunchedEffect(Unit) {
         while (true) {
-            videoPosition = exoPlayer.currentPosition
+            viewModel.setVideoPosition()
             delay(1000)
         }
     }
@@ -153,18 +133,20 @@ fun VideoPlayerScreen(navController: NavHostController) {
 
         val playerListener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
-                videoDuration = exoPlayer.duration
-                videoPosition = exoPlayer.currentPosition
+                viewModel.setVideoPosition()
+                viewModel.setVideoDuration()
 
                 if (playbackState == Player.STATE_ENDED) {
-                    isVideoFinished = true
-                    showControls = true
-                    isPlaying = !isPlaying
-                    exoPlayer.stop()
-                    exoPlayer.release()
+                    viewModel.setIsVideoFinished(true)
+                    viewModel.toggleShowControls()
+                    viewModel.toggleIsPlaying()
+                    viewModel.stopPlayer()
 
                     coroutineScope.launch {
                         delay(1000)
+                        if (isLandScapeOrientation) {
+                            (context as? Activity)?.rotateScreenToLandscape(false)
+                        }
                         navController.navigateUp()
                     }
 
@@ -173,11 +155,11 @@ fun VideoPlayerScreen(navController: NavHostController) {
         }
 
         lifeCycleOwner.lifecycle.addObserver(lifecycleObserver)
-        exoPlayer.addListener(playerListener)
+        viewModel.player.addListener(playerListener)
 
         onDispose {
             lifeCycleOwner.lifecycle.removeObserver(lifecycleObserver)
-            exoPlayer.removeListener(playerListener)
+            viewModel.player.removeListener(playerListener)
         }
     }
 
@@ -194,39 +176,25 @@ fun VideoPlayerScreen(navController: NavHostController) {
         }
     }
 
-
-    fun onFastForward() {
-        exoPlayer.seekTo(exoPlayer.currentPosition + 10000)
-    }
-
     fun onBackPressed() {
-        exoPlayer.stop()
-        exoPlayer.release()
-
+        viewModel.stopPlayer()
         coroutineScope.launch {
             delay(10)
+            if (isLandScapeOrientation) {
+                (context as? Activity)?.rotateScreenToLandscape(false)
+            }
             navController.navigateUp()
         }
     }
 
-    fun onPlayPauseToggle() {
-        if (isVideoFinished) {
-            isVideoFinished = false
-            exoPlayer.seekTo(0)
-            exoPlayer.play()
-            isPlaying = !isPlaying
+    fun onRotateClicked() {
+        if (!isLandScapeOrientation) {
+            (context as? Activity)?.rotateScreenToLandscape(true)
+            viewModel.setIsLandScape(true)
         } else {
-            isPlaying = !isPlaying
-            if (isPlaying) {
-                exoPlayer.pause()
-            } else {
-                exoPlayer.play()
-            }
+            (context as? Activity)?.rotateScreenToLandscape(false)
+            viewModel.setIsLandScape(false)
         }
-    }
-
-    fun onRewind() {
-        exoPlayer.seekTo(exoPlayer.currentPosition - 10000)
     }
 
 
@@ -235,11 +203,11 @@ fun VideoPlayerScreen(navController: NavHostController) {
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures {
-                    showControls = !showControls
+                    viewModel.toggleShowControls()
                     if (showControls) {
                         coroutineScope.launch {
                             delay(5000)
-                            showControls = false
+                            viewModel.toggleShowControls()
                         }
                     } else {
                         coroutineScope.coroutineContext.cancelChildren()
@@ -253,7 +221,7 @@ fun VideoPlayerScreen(navController: NavHostController) {
             when (lifeCycle) {
                 Lifecycle.Event.ON_PAUSE -> {
                     it.onPause()
-                    isPlaying = true
+                    viewModel.toggleIsPlaying()
                     it.player?.pause()
                 }
 
@@ -264,8 +232,8 @@ fun VideoPlayerScreen(navController: NavHostController) {
                 else -> Unit
             }
         }, factory = {
-            PlayerView(context).apply {
-                player = exoPlayer
+            PlayerView(it).apply {
+                player = viewModel.player
                 useController = false
                 FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
@@ -298,12 +266,6 @@ fun VideoPlayerScreen(navController: NavHostController) {
                             modifier = Modifier.size(35.dp)
                         )
                     }
-                    val uri = if (!videoUri.isNullOrEmpty()) {
-                        Uri.parse(videoUri)
-                    } else {
-                        Uri.parse("Video")
-                    }
-                    val fileName = uri.lastPathSegment
                     Text(
                         text = fileName.toString(),
                         fontFamily = FontFamily(
@@ -329,26 +291,23 @@ fun VideoPlayerScreen(navController: NavHostController) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         PlayerButton(
-                            onClick = { onRewind() }, icon = R.drawable.arrow_left,
+                            onClick = { viewModel.onRewind() }, icon = R.drawable.arrow_left,
                         )
                         PlayerButton(
-                            onClick = { onPlayPauseToggle() },
+                            onClick = { viewModel.onPlayPauseToggle() },
                             icon = if (!isPlaying) R.drawable.round_pause else R.drawable.round_play,
                         )
                         PlayerButton(
-                            onClick = { onFastForward() }, icon = R.drawable.arrow_right,
+                            onClick = { viewModel.onFastForward() }, icon = R.drawable.arrow_right,
                         )
                     }
                 }
                 Column(
                     modifier = Modifier
-//                        .background(color = Color.LightGray.copy(alpha = 0.2f))
                 ) {
                     Slider(
-                        value = sliderValue, onValueChange = { newPosition ->
-                            val seekPosition = (newPosition * exoPlayer.duration / 1000).toLong()
-                            seekToPosition = seekPosition.coerceIn(0, exoPlayer.duration)
-                            sliderValue = newPosition
+                        value = sliderValue, onValueChange = {
+                            viewModel.onSliderValueChange(it)
                         }, valueRange = 0f..1000f
                     )
                     Row(
@@ -375,14 +334,7 @@ fun VideoPlayerScreen(navController: NavHostController) {
                         Spacer(modifier = Modifier.weight(1f))
                         Button(
                             onClick = {
-                                isLandScapeOrientation = if (!isLandScapeOrientation) {
-                                    (context as? Activity)?.rotateScreenToLandscape(true)
-                                    true
-                                } else {
-                                    (context as? Activity)?.rotateScreenToLandscape(false)
-                                    false
-                                }
-
+                                onRotateClicked()
                             },
                             colors = ButtonDefaults.buttonColors(Color.Transparent),
                         ) {
@@ -392,12 +344,9 @@ fun VideoPlayerScreen(navController: NavHostController) {
                                 modifier = Modifier.size(24.dp)
                             )
                         }
-
                     }
                 }
-
             }
-
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.player.v2player.components
+package com.player.v2player.presentation.homescreen.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column

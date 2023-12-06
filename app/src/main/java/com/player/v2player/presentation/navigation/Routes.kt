@@ -1,4 +1,4 @@
-package com.player.v2player.navigation
+package com.player.v2player.presentation.navigation
 
 sealed class Routes(val route : String){
     object Home : Routes("Home")

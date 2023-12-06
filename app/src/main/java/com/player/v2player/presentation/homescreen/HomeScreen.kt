@@ -1,14 +1,16 @@
-package com.player.v2player.views
+package com.player.v2player.presentation.homescreen
 
 import android.Manifest
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -40,11 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.player.v2player.R
-import com.player.v2player.constants.AppConstants
-import com.player.v2player.models.VideoDetails
-import com.player.v2player.navigation.Routes
-import com.player.v2player.viewModels.HomeViewModel
+import com.player.v2player.data.constants.AppConstants
+import com.player.v2player.data.models.VideoDetails
+import com.player.v2player.presentation.homescreen.viewmodel.ViewModel
+import com.player.v2player.presentation.navigation.Routes
+import com.player.v2player.presentation.permisson.NoPermission
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun HomeScreen(navController: NavHostController) {
 
@@ -53,7 +57,7 @@ fun HomeScreen(navController: NavHostController) {
         mutableStateOf(true)
     }
 
-    val viewModel = HomeViewModel()
+    val viewModel = ViewModel()
     val contentResolver: ContentResolver = LocalContext.current.contentResolver
     val dialogQueue = viewModel.visiblePermissionDialogQueue
     val permissionsToRequest = arrayOf(

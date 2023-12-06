@@ -1,4 +1,4 @@
-package com.player.v2player.constants
+package com.player.v2player.data.constants
 
 object AppConstants {
     const val AppName: String = "V2Player"

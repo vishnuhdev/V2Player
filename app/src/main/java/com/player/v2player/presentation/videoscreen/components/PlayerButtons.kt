@@ -1,4 +1,4 @@
-package com.player.v2player.components
+package com.player.v2player.presentation.videoscreen.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

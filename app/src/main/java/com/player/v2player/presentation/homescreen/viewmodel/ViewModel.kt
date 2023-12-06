@@ -1,13 +1,13 @@
-package com.player.v2player.viewModels
+package com.player.v2player.presentation.homescreen.viewmodel
 
 import android.content.ContentResolver
 import android.provider.MediaStore
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import com.player.v2player.models.VideoDetails
+import com.player.v2player.data.models.VideoDetails
 import java.io.File
 
-class HomeViewModel : ViewModel() {
+class ViewModel : ViewModel() {
 
     val visiblePermissionDialogQueue = mutableStateListOf<String>()
 
