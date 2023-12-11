@@ -10,9 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavHostController
-import com.player.v2player.presentation.homescreen.HomeScreen
 import com.player.v2player.presentation.homescreen.viewmodel.HomeViewModel
+import com.player.v2player.presentation.navigation.AppNavigation
 import com.player.v2player.presentation.utils.PermissionHandler
 import com.player.v2player.ui.theme.V2PlayerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,7 +31,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize(), color = Color.White
                 ) {
-                    HomeScreen(navController = NavHostController(this),viewModel)
+                    AppNavigation(viewModel)
                 }
             }
         }

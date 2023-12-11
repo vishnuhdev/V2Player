@@ -8,15 +8,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.player.v2player.presentation.filescreen.FileScreen
 import com.player.v2player.presentation.homescreen.HomeScreen
+import com.player.v2player.presentation.homescreen.viewmodel.HomeViewModel
 import com.player.v2player.presentation.videoscreen.VideoPlayerScreen
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(viewModel: HomeViewModel) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Routes.Home.route) {
         composable(Routes.Home.route) {
-            HomeScreen(navController)
+            HomeScreen(navController,viewModel)
         }
         composable(Routes.VideoScreen.route) {
             VideoPlayerScreen(navController)
