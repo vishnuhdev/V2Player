@@ -1,30 +1,13 @@
-package com.player.v2player.presentation.homescreen.viewmodel
+package com.player.v2player.data.repository
 
 import android.content.ContentResolver
 import android.provider.MediaStore
-import androidx.compose.runtime.mutableStateListOf
-import androidx.lifecycle.ViewModel
-import com.player.v2player.data.models.VideoDetails
+import com.player.v2player.domain.repository.VideoRepository
 import java.io.File
 
-class ViewModel : ViewModel() {
+class VideoRepositoryImpl() : VideoRepository {
 
-    val visiblePermissionDialogQueue = mutableStateListOf<String>()
-
-    fun dismissDialog() {
-        visiblePermissionDialogQueue.removeFirst()
-    }
-
-    fun onPermissionResult(
-        permission: String,
-        isGranted: Boolean
-    ) {
-        if (!isGranted && !visiblePermissionDialogQueue.contains(permission)) {
-            visiblePermissionDialogQueue.add(permission)
-        }
-    }
-
-    fun getAllVideos(contentResolver: ContentResolver): List<VideoDetails> {
+    override fun getVideosByFolder(contentResolver: ContentResolver): MutableMap<String, MutableList<String>> {
         val videosByFolder = mutableMapOf<String, MutableList<String>>()
         val projection = arrayOf(MediaStore.Video.Media._ID, MediaStore.Video.Media.DATA)
 
@@ -45,9 +28,6 @@ class ViewModel : ViewModel() {
                 videosByFolder.getOrPut(parentFolder) { mutableListOf() }.add(videoFile.toString())
             }
         }
-
-        return VideoDetails.fromMap(videosByFolder)
+        return videosByFolder;
     }
-
-
 }
