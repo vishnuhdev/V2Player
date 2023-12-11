@@ -1,5 +1,7 @@
 package com.player.v2player.presentation.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -8,6 +10,7 @@ import com.player.v2player.presentation.filescreen.FileScreen
 import com.player.v2player.presentation.homescreen.HomeScreen
 import com.player.v2player.presentation.videoscreen.VideoPlayerScreen
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()

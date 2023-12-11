@@ -1,15 +1,14 @@
 package com.player.v2player.presentation.homescreen
 
-import android.Manifest
 import android.app.Activity
 import android.content.ContentResolver
+import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,10 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,60 +35,33 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.player.v2player.R
 import com.player.v2player.data.constants.AppConstants
-import com.player.v2player.data.models.VideoDetails
-import com.player.v2player.presentation.homescreen.viewmodel.ViewModel
+import com.player.v2player.presentation.homescreen.viewmodel.HomeViewModel
 import com.player.v2player.presentation.navigation.Routes
 import com.player.v2player.presentation.permisson.NoPermission
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, viewModel: HomeViewModel = hiltViewModel<HomeViewModel>()) {
 
-    var videos by remember { mutableStateOf<List<VideoDetails>>(emptyList()) }
-    var isPermissionNotGrand by remember {
-        mutableStateOf(true)
-    }
 
-    val viewModel = ViewModel()
+    val state = viewModel.state.value
     val contentResolver: ContentResolver = LocalContext.current.contentResolver
-    val dialogQueue = viewModel.visiblePermissionDialogQueue
-    val permissionsToRequest = arrayOf(
-        Manifest.permission.READ_MEDIA_VIDEO
-    )
 
-    val cameraPermissionResultLauncher =
-        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission(),
-            onResult = { isGranted ->
-                Log.d("Permission", isGranted.toString())
-                if (isGranted) {
-                    isPermissionNotGrand = false
-                    videos = viewModel.getAllVideos(contentResolver)
-                    Log.d("videosss", videos.toString())
-                }
-                viewModel.onPermissionResult(
-                    permission = Manifest.permission.READ_EXTERNAL_STORAGE, isGranted = isGranted
-                )
-            })
-
-    LaunchedEffect(key1 = Unit) {
-        cameraPermissionResultLauncher.launch(
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        )
-    }
-
-    if (isPermissionNotGrand) {
+    if (!state.isGranted) {
         NoPermission(text = "We kindly request your permission to access storage for the smooth functioning of the application. Thank you!😊", image = R.drawable.folder)
     } else {
+        viewModel.getAllVideos(contentResolver)
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
         ) {
             LazyColumn(Modifier.fillMaxSize()) {
-                videos.forEach { (folder, fileNames) ->
+                state.videos.forEach { (folder, fileNames) ->
                     item {
                         TextButton(onClick = {
                             navController.currentBackStackEntry?.savedStateHandle?.apply {
@@ -173,6 +141,11 @@ fun Activity.openAppSettings() {
     ).also(::startActivity)
 }
 
+fun Context.getActivity(): ComponentActivity? = when (this) {
+    is ComponentActivity -> this
+    is ContextWrapper -> baseContext.getActivity()
+    else -> null
+}
 
 
 
